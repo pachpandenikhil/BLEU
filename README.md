@@ -1,16 +1,16 @@
 # BLEU
 BLEU score calculator for evaluating the accuracy of machine translation of different languages.
 
-- Implemented a BLEU score calculator for evaluating the accuracy of machine translation of different languages, as defined in the [paper](http://www.aclweb.org/anthology/P02-1040.pdf){:target="_blank"}.
+- Implemented a BLEU score calculator for evaluating the accuracy of machine translation of different languages, as defined in the [paper](http://www.aclweb.org/anthology/P02-1040.pdf).
 - Calculated BLEU score fully matches the true BLEU score.
 
 Core Technology: Python.
 
 # Data
 
-Many reference translations can be found from [EUROPARL corpus](http://www.statmt.org/europarl/archives.html){:target="_blank"}.
+Many reference translations can be found from [EUROPARL corpus](http://www.statmt.org/europarl/archives.html).
 
-The candidate translations can be obtained by taking the corresponding English sentences from the reference translations and running them through [Google Translate](https://translate.google.com/){:target="_blank"}.
+The candidate translations can be obtained by taking the corresponding English sentences from the reference translations and running them through [Google Translate](https://translate.google.com/).
 
 # Program
 
