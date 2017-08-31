@@ -1,4 +1,4 @@
-# BLEU
+# BLEU Calculator
 BLEU score calculator for evaluating the accuracy of machine translation of different languages.
 
 - Implemented a BLEU score calculator for evaluating the accuracy of machine translation of different languages, as defined in the [paper](http://www.aclweb.org/anthology/P02-1040.pdf).
