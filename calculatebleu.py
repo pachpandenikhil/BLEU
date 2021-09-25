@@ -1,20 +1,24 @@
 import sys
 import math
 import os
+import typing
+from collections import Counter
 from os import listdir
 from os.path import isfile
+from typing import List
 
 CONST_OUTPUT_FILE = "bleu_out.txt"
-CONST_MAX_NGRAMS = 4
+
 
 def read_file(file_path):
     lines = []
-    f = open(file_path, 'r')
-    for line in iter(f):
-        line = line.rstrip()
-        if line:
-            lines.append(line)
+    with open(file_path, "r") as f:
+        for line in iter(f):
+            line = line.rstrip()
+            if line:
+                lines.append(line)
     return lines
+
 
 def get_files(directory_path):
     files = []
@@ -23,11 +27,12 @@ def get_files(directory_path):
         files.append(os.path.join(directory_path, file))
     return files
 
+
 # Writes the output to file
 def write_output(output, file_path):
-    f = open(file_path, 'w')
-    f.write(str(output))
-    f.close()
+    with open(file_path, "w") as f:
+        f.write(str(output))
+
 
 def ngrams(sentences, n):
     ngrams_sentences = []
@@ -35,20 +40,24 @@ def ngrams(sentences, n):
         ngrams_sentence = []
         sentence = sentence.split()
         for i in range(len(sentence) - n + 1):
-            ngrams_sentence.append(' '.join(sentence[i:i + n]))
+            ngrams_sentence.append(" ".join(sentence[i : i + n]))
         ngrams_sentences.append(ngrams_sentence)
     return ngrams_sentences
 
-def get_tokens_freq(tokens):
-    tokens_freq = {}
-    for token in tokens:
-        if token in tokens_freq:
-            tokens_freq[token] += 1
-        else:
-            tokens_freq[token] = 1
-    return tokens_freq
 
-def compute_clip_count(candidate_tokens, reference_tokens):
+def get_tokens_freq(tokens: List[str]) -> typing.Counter[str]:
+    return Counter(tokens)
+
+
+def compute_clip_count(
+    candidate_tokens: List[List[str]], reference_tokens: List[List[List[str]]]
+) -> int:
+    """
+    :param candidate_tokens: inner dim denotes a sentence within the candidate
+    :param reference_tokens: 1st inner dim denotes a reference,
+                             2nd inner dim denotes a sentence within the reference
+    :return: clip count
+    """
     clip_count = 0
     tot_sentences = len(candidate_tokens)
     for sent_idx in range(tot_sentences):
@@ -60,7 +69,7 @@ def compute_clip_count(candidate_tokens, reference_tokens):
             ref_tokens_freq_list.append(get_tokens_freq(ref_sent_tokens))
 
         cand_tokens_clip_count = {}
-        for token, token_freq in cand_tokens_freq.iteritems():
+        for token, token_freq in cand_tokens_freq.items():
             ref_token_freq = 0
             for ref_tokens_freq in ref_tokens_freq_list:
                 if token in ref_tokens_freq:
@@ -69,12 +78,10 @@ def compute_clip_count(candidate_tokens, reference_tokens):
         clip_count += sum(cand_tokens_clip_count.values())
     return clip_count
 
-def get_ngram_length(candidate_sentences, ngram):
-    sum = 0
-    for sentence in candidate_sentences:
-        tokens = sentence.strip().split()
-        sum += (len(tokens) - ngram + 1)
-    return sum
+
+def get_ngram_length(candidate_sentences: List[str], ngram: int) -> int:
+    return sum([len(sentence.strip().split()) - ngram + 1 for sentence in candidate_sentences])
+
 
 def compute_brevity_penalty(candidate_sentences, reference_sentences):
     bp = 0.0
@@ -83,14 +90,14 @@ def compute_brevity_penalty(candidate_sentences, reference_sentences):
     cand_sent_unigrams = ngrams(candidate_sentences, 1)
     ref_sent_unigrams = []
     for ref_sent_list in reference_sentences:
-        ref_sent_unigrams.append( ngrams(ref_sent_list, 1))
+        ref_sent_unigrams.append(ngrams(ref_sent_list, 1))
 
     # computing numerator
     num = 0
     for sent_idx in range(len(candidate_sentences)):
         cand_sent_length = len(cand_sent_unigrams[sent_idx])
         closest_match = 0
-        diff = float('+inf')
+        diff = float("+inf")
         for ref_sent_unigrams_list in ref_sent_unigrams:
             ref_sent_length = len(ref_sent_unigrams_list[sent_idx])
             abs_diff = abs(cand_sent_length - ref_sent_length)
@@ -105,10 +112,11 @@ def compute_brevity_penalty(candidate_sentences, reference_sentences):
     if den > num:
         bp = 1
     else:
-        exp = 1 - (float(num)/den)
+        exp = 1 - (float(num) / den)
         bp = math.exp(exp)
 
     return bp
+
 
 def compute_bleu_score(candidate_sentences, reference_sentences, max_ngrams):
     bleu_score = 0.0
@@ -142,10 +150,12 @@ def compute_bleu_score(candidate_sentences, reference_sentences, max_ngrams):
 
     return bleu_score
 
-def main():
+
+def main(candidate_file="", reference_folder="", max_ngrams=4):
     bleu_score = 0.0
-    candidate_file = sys.argv[1]
-    reference_folder = sys.argv[2]
+    if len(sys.argv) > 1 and not candidate_file and not reference_folder:
+        candidate_file = sys.argv[1]
+        reference_folder = sys.argv[2]
 
     # reading candidate file
     candidate_sentences = read_file(candidate_file)
@@ -160,11 +170,14 @@ def main():
             reference_sentences.append(read_file(reference_file))
 
     # computing BLEU score
-    bleu_score = compute_bleu_score(candidate_sentences, reference_sentences, CONST_MAX_NGRAMS)
+    bleu_score = compute_bleu_score(
+        candidate_sentences, reference_sentences, max_ngrams
+    )
     return bleu_score
 
+
 # main execution
-if __name__ == '__main__':
+if __name__ == "__main__":
     bleu_score = main()
     output_file = CONST_OUTPUT_FILE
     write_output(bleu_score, output_file)
